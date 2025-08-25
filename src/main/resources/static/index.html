@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>CALTRON</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <style>
+    body{font-family:system-ui,Arial;max-width:900px;margin:2rem auto;padding:0 1rem}
+    .card{border:1px solid #ddd;border-radius:14px;padding:1rem;margin-bottom:1rem}
+    label{display:block;margin:.4rem 0 .2rem}
+    input{width:100%;padding:.6rem;border:1px solid #ccc;border-radius:8px}
+    button{padding:.7rem 1rem;border-radius:10px;border:0;background:#222;color:#fff;margin-top:1rem;cursor:pointer}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+    .out{white-space:pre-wrap;background:#fafafa;border:1px dashed #ddd;border-radius:8px;padding:1rem}
+  </style>
+</head>
+<body>
+  <h1>CALTRON</h1>
+  <div class="card">
+    <h3>Enter Scores</h3>
+    <div class="grid">
+      <div>
+        <label>Written Works: score / total</label>
+        <input id="wwScore" placeholder="e.g., 60">
+        <input id="wwTotal" placeholder="e.g., 90">
+      </div>
+      <div>
+        <label>Performance Tasks: score / total</label>
+        <input id="ptScore" placeholder="e.g., 150">
+        <input id="ptTotal" placeholder="e.g., 200">
+      </div>
+      <div>
+        <label>Quarterly Exam: score / total</label>
+        <input id="exScore" placeholder="e.g., 45">
+        <input id="exTotal" placeholder="e.g., 60">
+      </div>
+      <div>
+        <label>Weights (WW / PT / Exam) in %</label>
+        <input id="wWW" placeholder="25">
+        <input id="wPT" placeholder="50">
+        <input id="wEX" placeholder="25">
+      </div>
+    </div>
+    <button id="btn">Compute & Get Suggestions</button>
+  </div>
+
+  <div class="card">
+    <h3>Result</h3>
+    <div class="out" id="out">—</div>
+  </div>
+
+<script>
+document.getElementById('btn').onclick = async () => {
+  const payload = {
+    wwScore: Number(wwScore.value), wwTotal: Number(wwTotal.value),
+    ptScore: Number(ptScore.value), ptTotal: Number(ptTotal.value),
+    examScore: Number(exScore.value), examTotal: Number(exTotal.value),
+    wwWeight: Number(wWW.value), ptWeight: Number(wPT.value), examWeight: Number(wEX.value)
+  };
+  const res = await fetch('/api/compute', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+  const recs = (data.recommendations||[]).map((r,i)=>`${i+1}. ${r}`).join('\n');
+  out.textContent =
+`WW: ${data.wwPercent?.toFixed(2)}%
+PT: ${data.ptPercent?.toFixed(2)}%
+Exam: ${data.examPercent?.toFixed(2)}%
+
+Final (weighted): ${data.finalWeighted?.toFixed(2)}%
+Category: ${data.category}
+
+Suggestions:
+${recs || '—'}`;
+};
+</script>
+</body>
+</html>
